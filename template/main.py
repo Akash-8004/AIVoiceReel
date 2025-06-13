@@ -120,4 +120,5 @@ if __name__ == '__main__':
         os.makedirs(UPLOAD_FOLDER)
     if not os.path.exists('static/reels'):
         os.makedirs('static/reels')
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Render sets PORT automatically
+    app.run(host="0.0.0.0", port=port)
