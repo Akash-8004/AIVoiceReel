@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Create Reel - AI Reel Generator{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/create.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="upload-section">
+    <div class="container">
+        <div class="upload-container">
+            <h1 class="upload-title">Create Your Reel</h1>
+            <p class="upload-instructions">Upload images or muted videos (MP4, MOV) and we'll combine them with AI
+                voiceover.</p>
+            <form action="/create" method="post" enctype="multipart/form-data" id="reelForm">
+                <input type="hidden" name="uuid" value="{{ my_id }}">
+
+                <div class="upload-area" id="dropZone">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <p>Drag & Drop multiple images/muted videos here or click to browse</p>
+                    <input type="file" id="fileInput" name="media" multiple accept="image/*,video/*"
+                        style="display: none;">
+                    <button type="button" class="browse-btn" onclick="document.getElementById('fileInput').click()">
+                        Select Files
+                    </button>
+                </div>
+
+                <div class="preview-container" id="previewContainer">
+                    <!-- Files will be previewed here -->
+                </div>
+
+                <div class="text-input-container">
+                    <label for="textInput">Script for AI Voiceover:</label>
+                    <textarea class="text-input" id="textInput" name="text"
+                        placeholder="Enter the text you want converted to voiceover..." rows="4" required></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    Generate Reel
+                </button>
+            </form>
+
+        </div>
+    </div>
+</section>
+
+<div class="processing-modal" id="processingModal">
+    <div class="modal-content">
+        <h3>Generating Your Reel</h3>
+        <div class="loader"></div>
+        <p>This may take a few moments...</p>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const form = document.getElementById('reelForm');
+
+        // Handle file selection
+        fileInput.addEventListener('change', function (e) {
+            handleFiles(e.target.files);
+        });
+
+        // Handle drag and drop
+        dropZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', function () {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            previewContainer.innerHTML = '';
+
+            // Filter out non-image/video files
+            const validFiles = Array.from(files).filter(file =>
+                file.type.startsWith('image/') || file.type.startsWith('video/')
+            );
+
+            if (validFiles.length === 0) {
+                alert('Please select only image or video files');
+                return;
+            }
+
+            // Update the file input with selected files
+            const dataTransfer = new DataTransfer();
+            validFiles.forEach(file => dataTransfer.items.add(file));
+            fileInput.files = dataTransfer.files;
+
+            // Display previews
+            validFiles.forEach(file => {
+                const preview = document.createElement('div');
+                preview.className = 'file-preview';
+
+                if (file.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    preview.appendChild(img);
+                } else if (file.type.startsWith('video/')) {
+                    const video = document.createElement('video');
+                    video.src = URL.createObjectURL(file);
+                    video.controls = true;
+                    preview.appendChild(video);
+                }
+
+                const info = document.createElement('div');
+                info.className = 'file-info';
+                info.innerHTML = `
+                <span>${file.name}</span>
+                <span>${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+            `;
+                preview.appendChild(info);
+
+                previewContainer.appendChild(preview);
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Gallery - AI Reel Generator{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gallery.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container gallery-container">
+    <h1 class="gallery-title">Your Generated Reels</h1>
+
+    {% if not reels %}
+    <div class="empty-gallery">
+        <i class="fas fa-film"></i>
+        <p>No reels generated yet</p>
+        <a href="/create" class="btn">Create Your First Reel</a>
+    </div>
+    {% else %}
+    <div class="gallery-grid">
+        {% for reel in reels %}
+        {% set reel_name = reel.split('.')[0] %}
+        <div class="reel-card" id="reel-{{ reel_name }}">
+            <div class="video-thumbnail-container">
+                <video class="video-thumbnail" muted loop playsinline>
+                    <source src="/static/reels/{{ reel }}#t=1" type="video/mp4">
+                </video>
+                <div class="play-overlay" onclick="playVideo('{{ reel }}')">
+                    <i class="fas fa-play"></i>
+                </div>
+            </div>
+            <div class="reel-actions">
+                <button onclick="playVideo('{{ reel }}')">
+                    <i class="fas fa-play"></i> Play
+                </button>
+                <a href="/static/reels/{{ reel }}" download>
+                    <i class="fas fa-download"></i> Download
+                </a>
+                <button onclick="deleteReel('{{ reel_name }}')" class="delete-btn">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Fullscreen Video Modal -->
+<div id="videoModal" class="video-modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <video id="fullscreenVideo" controls autoplay>
+            Your browser does not support the video tag.
+        </video>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+    // Initialize all video thumbnails to autoplay (muted)
+    document.addEventListener('DOMContentLoaded', function () {
+        const thumbnails = document.querySelectorAll('.video-thumbnail');
+        thumbnails.forEach(video => {
+            video.play().catch(e => console.log("Autoplay prevented:", e));
+        });
+    });
+
+    function playFullVideo(reelName) {
+        const modal = document.getElementById('videoModal');
+        const video = document.getElementById('fullscreenVideo');
+        video.src = `/static/reels/${reelName}`;
+        modal.style.display = 'block';
+        video.play();
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('videoModal');
+        const video = document.getElementById('fullscreenVideo');
+        video.pause();
+        modal.style.display = 'none';
+    }
+
+    // Close modal when clicking outside the video
+    window.onclick = function (event) {
+        const modal = document.getElementById('videoModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+
+    function deleteReel(reelName) {
+        if (confirm('Permanently delete this reel and all its assets?')) {
+            showLoader(); // Show loading indicator
+
+            fetch(`/delete_reel/${reelName}`, {
+                method: 'DELETE'
+            })
+                .then(handleResponse)
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById(`reel-${reelName}`).remove();
+                        showToast('Reel and all assets deleted permanently');
+                    }
+                })
+                .catch(handleError)
+                .finally(hideLoader);
+        }
+    }
+
+    function handleResponse(response) {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.error || 'Deletion failed');
+            });
+        }
+        return response.json();
+    }
+
+    function handleError(error) {
+        console.error('Deletion error:', error);
+        showToast(error.message || 'Deletion failed', 'error');
+    }
+
+    function showLoader() {
+        // Implement your loading indicator
+    }
+
+    function hideLoader() {
+        // Hide your loading indicator
+    }
+    // Unified play function for both thumbnail clicks and play buttons
+    function playVideo(reelName) {
+        playFullVideo(reelName); // Use the same modal player for both
+    }
+
+</script>
+{% endblock %}

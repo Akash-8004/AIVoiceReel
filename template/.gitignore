@@ -1,0 +1,28 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+env/
+
+# IDE settings
+.vs/
+.idea/
+*.code-workspace
+
+# Distribution / build folders
+dist/
+build/
+*.egg-info/
+.dist/
+
+# Secrets and environment variables
+*.env
+config.env
+
+# User uploads (runtime data)
+user_uploads/
+
+# Logs
+*.log
