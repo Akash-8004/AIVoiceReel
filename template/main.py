@@ -3,14 +3,10 @@ import uuid
 import os
 import shutil
 from werkzeug.utils import secure_filename
-
 from dotenv import load_dotenv
+from generate_process import process_folder  # ✅ Imported new function
+
 load_dotenv()
-
-import os
-app = Flask(__name__)
-
-
 
 UPLOAD_FOLDER = 'user_uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'mp4', 'mov', 'avi'}
@@ -38,16 +34,13 @@ def create():
             flash('Missing required fields')
             return redirect(request.url)
         
-        # Create directory if it doesn't exist
         os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], rect_id), exist_ok=True)
         
-        # Save description
         with open(os.path.join(app.config['UPLOAD_FOLDER'], rect_id, "desc.txt"), "w") as f:
             f.write(desc)
         
-        # Process uploaded files - using getlist() for multiple files
         media_files = []
-        for file in request.files.getlist('media'):  # Changed to getlist
+        for file in request.files.getlist('media'):
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], rect_id, filename)
@@ -58,29 +51,28 @@ def create():
             flash('No valid files uploaded')
             return redirect(request.url)
         
-        # Generate input.txt based on file types
         with open(os.path.join(app.config['UPLOAD_FOLDER'], rect_id, "input.txt"), "w") as f:
             for filename in media_files:
                 ext = os.path.splitext(filename)[1].lower()
-                if ext in ['.mp4', '.mov', '.avi']:  # Video files
+                if ext in ['.mp4', '.mov', '.avi']:
                     f.write(f"file '{filename}'\n")
-                else:  # Image files
-                    f.write(f"file '{filename}'\nduration 3\n")  # Default 3 sec per image
-        
+                else:
+                    f.write(f"file '{filename}'\nduration 3\n")
+
+        # ✅ Generate reel immediately
+        process_folder(rect_id)
+
         flash("Reel is created in gallery", "success")
-        return render_template("create.html", my_id=my_id) 
+        return render_template("create.html", my_id=my_id)
     
     return render_template("create.html", my_id=my_id)
-
 
 @app.route('/delete_reel/<reel_name>', methods=['DELETE'])
 def delete_reel(reel_name):
     try:
-        # Security check
         if not reel_name.replace('-', '').isalnum():
             return jsonify({'success': False, 'error': 'Invalid reel name'}), 400
         
-        # 1. Delete from static/reels/
         video_path = os.path.join('static', 'reels', f'{reel_name}.mp4')
         thumb_path = os.path.join('static', 'reels', f'{reel_name}.jpg')
         
@@ -88,16 +80,13 @@ def delete_reel(reel_name):
             if os.path.exists(path):
                 os.remove(path)
         
-        # 2. Delete from user_uploads/
         upload_folder = os.path.join('user_uploads', reel_name)
         if os.path.exists(upload_folder):
             shutil.rmtree(upload_folder)
         
-        # 3. Remove from done.txt
         if os.path.exists('done.txt'):
             with open('done.txt', 'r') as f:
                 done_folders = [line.strip() for line in f.readlines() if line.strip()]
-            
             with open('done.txt', 'w') as f:
                 for folder in done_folders:
                     if folder != reel_name:
@@ -121,8 +110,6 @@ if __name__ == '__main__':
     if not os.path.exists('static/reels'):
         os.makedirs('static/reels')
     
-
     
-    
-    port = int(os.environ.get("PORT", 10000))  # Render will set PORT env var
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=True)
