@@ -9,7 +9,7 @@ def text_to_audio(folder):
     with open(f"user_uploads/{folder}/desc.txt") as f:
         text = f.read()
     print(text, folder)
-    #text_to_speech_file(text, folder)
+    text_to_speech_file(text, folder)
 
 
 def create_reel(folder):
