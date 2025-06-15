@@ -35,6 +35,11 @@
    pip install -r requirements.txt
    ```
 
+4. **Uncomments important Functions from code
+     from file - generate_process.py/ Function - def process_folder(folder):
+        #text_to_audio(folder)
+        #create_reel(folder)
+
 4. **Run the app**
 
    ```bash
