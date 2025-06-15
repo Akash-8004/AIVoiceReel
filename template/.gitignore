@@ -21,8 +21,12 @@ build/
 *.env
 config.env
 
-# User uploads (runtime data)
-user_uploads/
+# Ignore all contents inside user_uploads folder
+user_uploads/*
+
+# But keep this placeholder file to preserve folder in Git
+!user_uploads/.keep
+
 
 # Logs
 *.log
