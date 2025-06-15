@@ -62,7 +62,7 @@ def create():
         # ✅ Generate reel immediately
         process_folder(rect_id)
 
-        flash("Reel is created in gallery", "success")
+        flash("Upload successful. Audio & reel generation are currently paused. Demo reels are in the gallery.", "info")
         return render_template("create.html", my_id=my_id)
     
     return render_template("create.html", my_id=my_id)
@@ -113,4 +113,5 @@ if __name__ == '__main__':
     
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=True)
+    
     

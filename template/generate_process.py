@@ -55,7 +55,7 @@ def create_reel(folder):
 
 # ✅ New function to be called from main.py
 def process_folder(folder):
-    text_to_audio(folder)
-    create_reel(folder)
+    #text_to_audio(folder)
+    #create_reel(folder)
     with open("done.txt", "a") as f:
         f.write(folder + "\n")
